@@ -1,51 +1,83 @@
-# macshot - macOS Screenshot Decorator CLI
+# 🖼️ macshot
 
-> 输入截图，输出 macOS 窗口风格的装饰图片
+CLI tool to decorate screenshots with macOS window frames.
 
-## 安装
+## Install
+
 ```bash
-npm install -g .
+npm install -g macshot
 ```
 
-## 使用
+## Usage
+
+### Basic
+
 ```bash
-# 基础用法
-macshot input.png
+macshot screenshot.png
+```
 
-# 指定背景主题
-macshot input.png --theme sonoma
+### With Options
 
-# 自定义标题
-macshot input.png --title "My App"
+```bash
+# Choose a background theme
+macshot screenshot.png --theme sonoma
 
-# 暗色模式
-macshot input.png --dark
+# Add window title
+macshot screenshot.png --title "My App"
 
-# AI 生成背景（需要 OPENAI_API_KEY）
-macshot input.png --ai --prompt "ocean sunset"
+# Dark mode
+macshot screenshot.png --dark
 
-# 调整参数
-macshot input.png --padding 80 --radius 12 --shadow
+# Custom padding, corner radius, and shadow
+macshot screenshot.png --padding 80 --radius 12 --shadow
 
-# 列出主题
+# Specify output path
+macshot screenshot.png -o output.png
+```
+
+### AI Background (requires OpenAI API key)
+
+```bash
+# Use DALL-E to generate a unique background
+macshot screenshot.png --ai
+
+# With a custom prompt
+macshot screenshot.png --ai --prompt "ocean sunset at golden hour"
+```
+
+Set your API key in `~/.macshot.json`:
+
+```json
+{
+  "openaiApiKey": "sk-..."
+}
+```
+
+Or use the `OPENAI_API_KEY` environment variable.
+
+## Themes
+
+| Theme | Description |
+|-------|-------------|
+| `sonoma` | macOS Sonoma — warm golden hour tones |
+| `ventura` | macOS Ventura — deep ocean blues and teals |
+| `monterey` | macOS Monterey — rich purple and violet |
+| `sequoia` | macOS Sequoia — forest green to sky blue |
+| `sunset` | Warm sunset — orange, pink, purple |
+| `ocean` | Deep ocean — dark blue to aqua |
+| `aurora` | Northern lights — green, teal, purple |
+| `lavender` | Soft lavender — purple to pink pastel |
+
+List all themes:
+
+```bash
 macshot --list-themes
-
-# 指定输出路径
-macshot input.png -o output.png
 ```
 
-## 主题
-- sonoma — macOS Sonoma 紫蓝渐变
-- ventura — macOS Ventura 橙蓝渐变
-- monterey — macOS Monterey 蓝紫渐变
-- sequoia — macOS Sequoia 青绿渐变
-- sunset — 日落橙红渐变
-- ocean — 深海蓝绿渐变
-- aurora — 极光紫绿渐变
-- lavender — 薰衣草紫粉渐变
+## Configuration
 
-## 配置
-创建 `~/.macshot.json`：
+Create `~/.macshot.json` to set defaults:
+
 ```json
 {
   "theme": "sonoma",
@@ -56,3 +88,24 @@ macshot input.png -o output.png
   "openaiApiKey": "sk-..."
 }
 ```
+
+CLI flags always override config file values.
+
+## Options
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-o, --output <path>` | `<input>-macshot.png` | Output file path |
+| `-t, --theme <name>` | `sonoma` | Background theme |
+| `--title <text>` | — | Window title bar text |
+| `--dark` | `false` | Dark mode window frame |
+| `--padding <px>` | `80` | Padding around window |
+| `--radius <px>` | `10` | Window corner radius |
+| `--shadow` | `false` | Add drop shadow |
+| `--ai` | `false` | Use DALL-E for background |
+| `--prompt <text>` | `"abstract gradient background"` | AI background prompt |
+| `--list-themes` | — | List available themes |
+
+## License
+
+MIT
