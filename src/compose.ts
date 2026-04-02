@@ -39,7 +39,7 @@ export async function compose(options: ComposeOptions): Promise<string> {
   }
 
   const padding = options.padding ?? 80;
-  const radius = options.radius ?? 10;
+  const radius = options.radius ?? 16;
   const dark = options.dark ?? false;
   const shadow = options.shadow ?? false;
   const themeName = options.theme ?? 'sonoma';
@@ -80,30 +80,59 @@ export async function compose(options: ComposeOptions): Promise<string> {
     shadow,
   });
 
-  // 3. Composite: background -> window frame overlay -> screenshot
+  // 3. Composite: background -> window frame overlay -> screenshot (clipped to window corners)
   const frameBuffer = await sharp(Buffer.from(frameSvg))
     .resize(windowWidth, windowHeight)
     .png()
     .toBuffer();
+
+  // Create a rounded-rect clip SVG for the screenshot area
+  const clipSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${windowWidth}" height="${windowHeight}">
+  <defs>
+    <clipPath id="winClip">
+      <rect x="0" y="${titleBarHeight}" width="${windowWidth}" height="${windowHeight - titleBarHeight}" />
+    </clipPath>
+  </defs>
+</svg>`;
 
   const screenshotBuffer = await sharp(inputPath)
     .resize(screenshotWidth, screenshotHeight)
     .png()
     .toBuffer();
 
+  // Combine frame + screenshot into a single composited window with rounded corners
+  const windowBuffer = await sharp(
+    Buffer.alloc(windowWidth * windowHeight * 4),
+    { raw: { width: windowWidth, height: windowHeight, channels: 4 } }
+  )
+    .composite([
+      { input: frameBuffer, left: 0, top: 0 },
+      { input: screenshotBuffer, left: 0, top: titleBarHeight },
+    ])
+    .png()
+    .toBuffer();
+
+  // Apply rounded corner mask to the entire window
+  const roundedMask = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${windowWidth}" height="${windowHeight}">
+      <rect x="0" y="0" width="${windowWidth}" height="${windowHeight}" rx="${radius}" ry="${radius}" fill="white" />
+    </svg>`
+  );
+
+  const maskedWindow = await sharp(windowBuffer)
+    .composite([
+      { input: roundedMask, blend: 'dest-in' },
+    ])
+    .png()
+    .toBuffer();
+
   const result = await background
     .composite([
-      // Window frame (title bar + border)
+      // Window (frame + screenshot, with rounded corners)
       {
-        input: frameBuffer,
+        input: maskedWindow,
         left: padding,
         top: padding,
-      },
-      // Screenshot content below title bar
-      {
-        input: screenshotBuffer,
-        left: padding,
-        top: padding + titleBarHeight,
       },
     ])
     .png()

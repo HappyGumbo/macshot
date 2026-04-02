@@ -105,17 +105,27 @@ export function generateFrameSvg(options: FrameOptions): string {
   const titleBarRect = `<rect x="0" y="0" width="${width}" height="${TITLE_BAR_HEIGHT + 1}" fill="${titleBarBg}" clip-path="url(#titleClipInner)" />`;
 
   // Bottom rounded clip for the window border at bottom corners
+  // Clip path for screenshot area (body below title bar, with bottom-rounded corners)
+  const bodyClipPath = `
+  <clipPath id="bodyClip">
+    <rect x="0" y="${TITLE_BAR_HEIGHT}" width="${width}" height="${height - TITLE_BAR_HEIGHT}" />
+  </clipPath>`;
+
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
   ${shadowDef}
-  <g${shadowRef}>
+  <defs>
+    <clipPath id="windowClip">
+      <rect x="0" y="0" width="${width}" height="${height}" rx="${outerR}" ry="${outerR}" />
+    </clipPath>
+    ${titleBarClipPath}
+    ${bodyClipPath}
+  </defs>
+  <g${shadowRef} clip-path="url(#windowClip)">
     <rect x="0" y="0" width="${width}" height="${height}" rx="${outerR}" ry="${outerR}" fill="${bodyBg}" />
-    <defs>
-      ${titleBarClipPath}
-    </defs>
     ${titleBarRect}
     ${trafficLights}${titleSvg}
-    ${windowShape}
   </g>
+  ${windowShape}
 </svg>`;
 }
 
